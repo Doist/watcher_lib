@@ -11,7 +11,7 @@ To see how it's used check following projects:
 
 Sample usage (code from less-watcher):
 
-```javascript
+```coffeescript
 # Use `watcher-lib`, a library that abstracts away most of the implementation details.
 # This library also makes it possible to implement any watchers (see coffee-watcher for an example).
 watcher_lib = require './watcher-lib/watcher-lib'
