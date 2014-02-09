@@ -1,14 +1,21 @@
 # Require external dependencies (only node.js libs for now).
 execute = require('child_process').exec
 fs = require('fs')
+partial = require('partial')
 
 # Searches through a directory structure for `fileext` files using `find`.
 # For each `fileext` file it runs `fnCompile` to compile the file if it's modified.
 exports.findFiles = (fileext, dir, fnCompile) ->
     execute("find #{dir} -name '#{fileext}' -print",
            (error, stdout, stderr) ->
+               count = 0
+               timeout = 0
                for file in stdout.split('\n')
-                   fnCompile file if file
+                   if file
+                       count += 1
+                       if count % 20 == 0
+                           timeout += 1000
+                       setTimeout(partial(fnCompile, file), timeout)
     )
 
 
@@ -37,7 +44,7 @@ exports.compileIfNeeded = (watched_files, file, fnCompileFile) ->
 #
 # Compilation errors are printed out to stdout.
 exports.compileFile = (command, file, fnGetOutputfile) ->
-    execute(command, (error, stdout, stderr) ->
+    execute(command, {'maxBuffer': 800*1024}, (error, stdout, stderr) ->
         if error isnt null
             console.log error.message
         else

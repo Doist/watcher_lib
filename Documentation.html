@@ -1,43 +1,151 @@
-<!DOCTYPE html>  <html> <head>   <title>watcher_lib.coffee</title>   <meta http-equiv="content-type" content="text/html; charset=UTF-8">   <link rel="stylesheet" media="all" href="resources/docco.css" /> </head> <body>   <div id="container">     <div id="background"></div>          <table cellpadding="0" cellspacing="0">       <thead>         <tr>           <th class="docs">             <h1>               watcher_lib.coffee             </h1>           </th>           <th class="code">           </th>         </tr>       </thead>       <tbody>                               <tr id="section-1">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-1">&#182;</a>               </div>               <p>Require external dependencies (only node.js libs for now).</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">execute = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;child_process&#39;</span><span class="p">).</span><span class="nx">exec</span>
-<span class="nv">fs = </span><span class="nx">require</span><span class="p">(</span><span class="s1">&#39;fs&#39;</span><span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-2">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-2">&#182;</a>               </div>               <p>Searches through a directory structure for <code>fileext</code> files using <code>find</code>.
-For each <code>fileext</code> file it runs <code>fnCompile</code> to compile the file if it's modified.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.findFiles = </span><span class="nf">(fileext, dir, fnCompile) -&gt;</span>
-    <span class="nx">execute</span><span class="p">(</span><span class="s2">&quot;find #{dir} -name &#39;#{fileext}&#39; -print&quot;</span><span class="p">,</span>
-           <span class="nf">(error, stdout, stderr) -&gt;</span>
-               <span class="k">for</span> <span class="nx">file</span> <span class="k">in</span> <span class="nx">stdout</span><span class="p">.</span><span class="nx">split</span><span class="p">(</span><span class="s1">&#39;\n&#39;</span><span class="p">)</span>
-                   <span class="nx">fnCompile</span> <span class="nx">file</span> <span class="k">if</span> <span class="nx">file</span>
-    <span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-3">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-3">&#182;</a>               </div>               <p>Keeps a track of modified times for files in a in-memory object (<code>watched_files</code>),
+<!DOCTYPE html>
+
+<html>
+<head>
+  <title>watcher_lib.coffee</title>
+  <meta http-equiv="content-type" content="text/html; charset=UTF-8">
+  <meta name="viewport" content="width=device-width, target-densitydpi=160dpi, initial-scale=1.0; maximum-scale=1.0; user-scalable=0;">
+  <link rel="stylesheet" media="all" href="resources/docco.css" />
+</head>
+<body>
+  <div id="container">
+    <div id="background"></div>
+    
+    <ul class="sections">
+        
+          <li id="title">
+              <div class="annotation">
+                  <h1>watcher_lib.coffee</h1>
+              </div>
+          </li>
+        
+        
+        
+        <li id="section-1">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-1">&#182;</a>
+              </div>
+              <p>Require external dependencies (only node.js libs for now).</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre>execute = <span class="hljs-built_in">require</span>(<span class="hljs-string">'child_process'</span>).exec
+fs = <span class="hljs-built_in">require</span>(<span class="hljs-string">'fs'</span>)
+partial = <span class="hljs-built_in">require</span>(<span class="hljs-string">'partial'</span>)</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-2">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-2">&#182;</a>
+              </div>
+              <p>Searches through a directory structure for <code>fileext</code> files using <code>find</code>.
+For each <code>fileext</code> file it runs <code>fnCompile</code> to compile the file if it’s modified.</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">findFiles</span> = <span class="hljs-params">(fileext, dir, fnCompile)</span> -&gt;</span>
+    execute(<span class="hljs-string">"find <span class="hljs-subst">#{dir}</span> -name '<span class="hljs-subst">#{fileext}</span>' -print"</span>,
+           <span class="hljs-function"><span class="hljs-params">(error, stdout, stderr)</span> -&gt;</span>
+               count = <span class="hljs-number">0</span>
+               timeout = <span class="hljs-number">0</span>
+               <span class="hljs-keyword">for</span> file <span class="hljs-keyword">in</span> stdout.split(<span class="hljs-string">'\n'</span>)
+                   <span class="hljs-keyword">if</span> file
+                       count += <span class="hljs-number">1</span>
+                       <span class="hljs-keyword">if</span> count % <span class="hljs-number">20</span> == <span class="hljs-number">0</span>
+                           timeout += <span class="hljs-number">1000</span>
+                       setTimeout(partial(fnCompile, file), timeout)
+    )</pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-3">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-3">&#182;</a>
+              </div>
+              <p>Keeps a track of modified times for files in a in-memory object (<code>watched_files</code>),
 if a file is modified it recompiles it using fnCompileFile.</p>
+<p>When starting the script all files will be recompiled.</p>
 
-<p>When starting the script all files will be recompiled.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.compileIfNeeded = </span><span class="nf">(watched_files, file, fnCompileFile) -&gt;</span>
-    <span class="nx">fs</span><span class="p">.</span><span class="nx">stat</span><span class="p">(</span><span class="nx">file</span><span class="p">,</span> <span class="nf">(err, stats) -&gt;</span>
-        <span class="nv">old_mtime = </span><span class="nx">watched_files</span><span class="p">[</span><span class="nx">file</span><span class="p">]</span>
-        <span class="nv">new_mtime = </span><span class="k">new</span> <span class="nb">Date</span><span class="p">(</span><span class="nx">stats</span><span class="p">.</span><span class="nx">mtime</span><span class="p">)</span>
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">compileIfNeeded</span> = <span class="hljs-params">(watched_files, file, fnCompileFile)</span> -&gt;</span>
+    fs.stat<span class="hljs-function"><span class="hljs-params">(file, (err, stats) -&gt;
+        old_mtime = watched_files[file]
+        new_mtime = <span class="hljs-keyword">new</span> Date(stats.mtime)
 
-        <span class="k">if</span> <span class="o">!</span><span class="nx">old_mtime</span>
-            <span class="nv">should_compile = </span><span class="kc">true</span>
-        <span class="k">else</span> <span class="k">if</span> <span class="nx">new_mtime</span> <span class="o">&gt;</span> <span class="nx">old_mtime</span>
-            <span class="nv">should_compile = </span><span class="kc">true</span>
-        <span class="k">else</span>
-            <span class="nv">should_compile = </span><span class="kc">false</span>
+        <span class="hljs-keyword">if</span> !old_mtime
+            should_compile = <span class="hljs-literal">true</span>
+        <span class="hljs-keyword">else</span> <span class="hljs-keyword">if</span> new_mtime &gt; old_mtime
+            should_compile = <span class="hljs-literal">true</span>
+        <span class="hljs-keyword">else</span>
+            should_compile = <span class="hljs-literal">false</span>
 
-        <span class="nx">watched_files</span><span class="p">[</span><span class="nx">file</span><span class="p">]</span> <span class="o">=</span> <span class="nx">new_mtime</span>
+        watched_files[file] = new_mtime
 
-        <span class="nx">fnCompileFile</span> <span class="nx">file</span> <span class="k">if</span> <span class="nx">should_compile</span>
-    <span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-4">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-4">&#182;</a>               </div>               <p>Compiles a file using <code>command</code>.</p>
+        fnCompileFile file <span class="hljs-keyword">if</span> should_compile
+    )</span>
 
-<p>Compilation errors are printed out to stdout.</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.compileFile = </span><span class="nf">(command, file, fnGetOutputfile) -&gt;</span>
-    <span class="nx">execute</span><span class="p">(</span><span class="nx">command</span><span class="p">,</span> <span class="nf">(error, stdout, stderr) -&gt;</span>
-        <span class="k">if</span> <span class="nx">error</span> <span class="o">isnt</span> <span class="kc">null</span>
-            <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="nx">error</span><span class="p">.</span><span class="nx">message</span>
-        <span class="k">else</span>
-            <span class="nv">output_filename = </span><span class="nx">fnGetOutputfile</span><span class="p">(</span><span class="nx">file</span><span class="p">)</span>
-            <span class="nx">fs</span><span class="p">.</span><span class="nx">writeFile</span><span class="p">(</span><span class="nx">output_filename</span><span class="p">,</span> <span class="nx">stdout</span><span class="p">.</span><span class="nx">toString</span><span class="p">(),</span> <span class="nf">(err) -&gt;</span>
-                <span class="k">throw</span> <span class="nx">err</span> <span class="k">if</span> <span class="nx">err</span>
-                <span class="nx">console</span><span class="p">.</span><span class="nx">log</span> <span class="s2">&quot;Compiled #{file} to #{output_filename}&quot;</span>
-            <span class="p">)</span>
-    <span class="p">)</span></pre></div>             </td>           </tr>                               <tr id="section-5">             <td class="docs">               <div class="pilwrap">                 <a class="pilcrow" href="#section-5">&#182;</a>               </div>               <p>Starts a poller that polls each second in a directory</p>             </td>             <td class="code">               <div class="highlight"><pre><span class="nv">exports.startDirectoryPoll = </span><span class="nf">(dir, fnFindFiles) -&gt;</span>
-    <span class="nv">directoryPoll = </span><span class="o">-&gt;</span> <span class="nx">fnFindFiles</span><span class="p">(</span><span class="nx">dir</span><span class="p">)</span>
-    <span class="nx">directoryPoll</span><span class="p">()</span>
-    <span class="nx">setInterval</span> <span class="nx">directoryPoll</span><span class="p">,</span> <span class="mi">1000</span>
+</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-4">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-4">&#182;</a>
+              </div>
+              <p>Compiles a file using <code>command</code>.</p>
+<p>Compilation errors are printed out to stdout.</p>
 
-</pre></div>             </td>           </tr>                </tbody>     </table>   </div> </body> </html> 
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">compileFile</span> = <span class="hljs-params">(command, file, fnGetOutputfile)</span> -&gt;</span>
+    execute<span class="hljs-function"><span class="hljs-params">(command, {<span class="hljs-string">'maxBuffer'</span>: <span class="hljs-number">800</span>*<span class="hljs-number">1024</span>}, (error, stdout, stderr) -&gt;
+        <span class="hljs-keyword">if</span> error <span class="hljs-keyword">isnt</span> <span class="hljs-literal">null</span>
+            <span class="hljs-built_in">console</span>.log error.message
+        <span class="hljs-keyword">else</span>
+            output_filename = fnGetOutputfile(file)
+            fs.writeFile(output_filename, stdout.toString(), (err) -&gt;
+                <span class="hljs-keyword">throw</span> err <span class="hljs-keyword">if</span> err
+                <span class="hljs-built_in">console</span>.log <span class="hljs-string">"Compiled <span class="hljs-subst">#{file}</span> to <span class="hljs-subst">#{output_filename}</span>"</span>
+            )
+    )</span>
+
+
+</span></pre></div></div>
+            
+        </li>
+        
+        
+        <li id="section-5">
+            <div class="annotation">
+              
+              <div class="pilwrap ">
+                <a class="pilcrow" href="#section-5">&#182;</a>
+              </div>
+              <p>Starts a poller that polls each second in a directory</p>
+
+            </div>
+            
+            <div class="content"><div class='highlight'><pre><span class="hljs-built_in">exports</span>.<span class="hljs-function"><span class="hljs-title">startDirectoryPoll</span> = <span class="hljs-params">(dir, fnFindFiles)</span> -&gt;</span>
+    <span class="hljs-function"><span class="hljs-title">directoryPoll</span> = -&gt;</span> fnFindFiles(dir)
+    directoryPoll()
+    setInterval directoryPoll, <span class="hljs-number">1000</span></pre></div></div>
+            
+        </li>
+        
+    </ul>
+  </div>
+</body>
+</html>
